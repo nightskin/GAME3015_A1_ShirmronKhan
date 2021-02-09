@@ -1,0 +1,13 @@
+﻿  Camera.cpp
+  d3dApp.cpp
+  d3dUtil.cpp
+C:\Users\Shimron\Desktop\school and work\school\Game Engine Development 2\DirectX-master\Common\d3dUtil.cpp(30,5): warning C4244: 'argument': conversion from 'std::streamoff' to 'SIZE_T', possible loss of data
+C:\Users\Shimron\Desktop\school and work\school\Game Engine Development 2\DirectX-master\Common\d3dUtil.cpp(70,32): warning C4244: '=': conversion from 'UINT64' to 'LONG_PTR', possible loss of data
+  DDSTextureLoader.cpp
+  GameTimer.cpp
+  GeometryGenerator.cpp
+  MathHelper.cpp
+  FrameResource.cpp
+  Week6-1-CrateApp_AlphaTest.cpp
+  Generating Code...
+  A1.vcxproj -> C:\Users\Shimron\Desktop\school and work\school\Game Engine Development 2\DirectX-master\A1\Debug\A1.exe
