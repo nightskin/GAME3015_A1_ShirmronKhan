@@ -13,37 +13,33 @@ void World::Load()
 {
 	for (int i = 0; i < 3; i++)
 	{
-		aircrafts[i] = new Entity;
-		std::string name = std::to_string(i) + "planeTex";
-		aircrafts[i]->LoadTexure(name, L"../../Textures/plane.dds");
-		aircrafts[i]->SetScale(2, 2, 2);
-		aircrafts[i]->SetVelocity(0, 5);
-		AddEntity(aircrafts[i]);
+		aircrafts[i] = new Aircraft();
+		aircrafts[i]->SetName(std::to_string(i) + "plane");
+		aircrafts[i]->Load(aircrafts[i]->GetName(), L"../../Textures/plane.dds");
+		AddEntity(std::move(aircrafts[i]));
 	}
 
 	aircrafts[0]->SetPosition(0, 0);
-	aircrafts[1]->SetPosition(aircrafts[0]->GetPosition().x - 3, aircrafts[0]->GetPosition().y - 3);
-	aircrafts[2]->SetPosition(aircrafts[0]->GetPosition().x + 3, aircrafts[0]->GetPosition().y - 3);
+	aircrafts[1]->SetPosition(aircrafts[0]->GetPosition3f().x - 3, aircrafts[0]->GetPosition3f().y - 3);
+	aircrafts[2]->SetPosition(aircrafts[0]->GetPosition3f().x + 3, aircrafts[0]->GetPosition3f().y - 3);
 
-	bg = new Entity;
-	bg->LoadTexure("grassTex", L"../../Textures/grass.dds");
-	bg->SetScale(100, 100, 100);
-	bg->SetLayer(-1);
-	bg->SetPosition(-50, 50);
-	AddEntity(bg);
+	bg = new BG;
+	bg->Load("grassTex", L"../../Textures/grass.dds");
+
+	AddEntity(std::move(bg));
 }
 
 void World::Update(const GameTimer& gt)
 {
-	for (int i = 0; i < entities.size(); i++)
+	for (int i = 0; i < 3; i++)
 	{
-		GetEntity(i)->Update();
+		aircrafts[i]->Update();
 	}
 }
 
-void World::AddEntity(Entity* entity)
+void World::AddEntity(Entity* e)
 {
-	entities.push_back(entity);
+	entities.push_back(e);
 }
 
 Entity* World::GetEntity(int i)
@@ -55,4 +51,3 @@ std::vector<Entity*> World::GetEntities()
 {
 	return entities;
 }
-

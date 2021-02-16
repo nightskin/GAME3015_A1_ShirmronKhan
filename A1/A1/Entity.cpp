@@ -12,17 +12,11 @@ Entity::~Entity()
 
 void Entity::Update()
 {
-	position.x += velocity.x;
-	position.y += velocity.y;
-	position.z = 0.1f * layer;
+	position3f.x += velocity3f.x;
+	position3f.y += velocity3f.y;
 }
 
-void Entity::Load()
-{
-	
-}
-
-void Entity::LoadTexure(std::string id, std::wstring TexPath)
+void Entity::Load(std::string id, std::wstring TexPath)
 {
 	name = id;
 	pathToTex = TexPath;
@@ -30,67 +24,79 @@ void Entity::LoadTexure(std::string id, std::wstring TexPath)
 
 void Entity::SetVelocity(XMFLOAT3 v)
 {
-	velocity = v;
+	velocity3f = v;
 }
 
 void Entity::SetVelocity(float x, float y)
 {
-	velocity.x = x;
-	velocity.y = y;
+	velocity3f.x = x;
+	velocity3f.y = y;
+	velocity3f.z = 0;
 }
 
 void Entity::SetPosition(XMFLOAT3 pos)
 {
-	position.x = pos.x;
-	position.y = pos.y;
-	position.z = layer;
+	position3f.x = pos.x;
+	position3f.y = pos.y;
+	position3f.z = layer;
 }
 
 void Entity::SetPosition(float x, float y)
 {
-	position.x = x;
-	position.y = y;
-	position.z = layer;
+	position3f.x = x;
+	position3f.y = y;
+	position3f.z = layer;
 }
 
 void Entity::SetLayer(float l)
 {
-	layer = l * 0.1f;
+	layer = l;
 }
 
 void Entity::SetScale(XMFLOAT3 s)
 {
-	scale = s;
+	scale3f = s;
+	scale3f.z = 1;
 }
 
-void Entity::SetScale(float x, float y, float z)
+void Entity::SetScale(float x, float y)
 {
-	scale.x = x;
-	scale.y = y;
-	scale.z = x;
+	scale3f.x = x;
+	scale3f.y = y;
+	scale3f.z = 1;
 }
 
-XMFLOAT3 Entity::GetScale()
+void Entity::SetName(std::string id)
 {
-	return scale;
+	name = id;
 }
 
-XMFLOAT3 Entity::GetVelocity()
+void Entity::SetImagePath(std::wstring path)
 {
-	return velocity;
+	pathToTex = path;
 }
 
-XMFLOAT3 Entity::GetPosition()
+XMFLOAT3 Entity::GetScale3f()
 {
-	return position;
+	return scale3f;
 }
 
-std::string Entity::GetTextureName()
+XMFLOAT3 Entity::GetVelocity3f()
+{
+	return velocity3f;
+}
+
+XMFLOAT3 Entity::GetPosition3f()
+{
+	return position3f;
+}
+
+std::string Entity::GetName()
 {
 	return name;
 }
 
-std::wstring Entity::GetTexturePath()
+std::wstring Entity::GetImagePath()
 {
 	return pathToTex;
 }

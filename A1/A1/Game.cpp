@@ -28,7 +28,7 @@ bool Game::Initialize()
 	BuildShadersAndInputLayout();
 	BuildShapeGeometry();
 	BuildMaterials();
-	BuildRenderItems();
+	BuildEntities();
 	BuildFrameResources();
 	BuildPSOs();
 	
@@ -72,7 +72,7 @@ void Game::Update(const GameTimer& gt)
 		CloseHandle(eventHandle);
 	}
 
-	AnimateMaterials(gt);
+	UpdateEntities(gt);
 	UpdateObjectCBs(gt);
 	UpdateMaterialCBs(gt);
 	UpdateMainPassCB(gt);
@@ -116,7 +116,7 @@ void Game::Draw(const GameTimer& gt)
 
 
 	mCommandList->SetPipelineState(mPSOs["alphaTested"].Get());
-	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::AlphaTested]);
+	DrawEntities(mCommandList.Get(), mRitemLayer[(int)RenderLayer::AlphaTested]);
 
 
 	// Indicate a state transition on the resource usage.
@@ -179,15 +179,28 @@ void Game::UpdateCamera(const GameTimer& gt)
 	XMStoreFloat4x4(&mView, view);
 }
 
-void Game::AnimateMaterials(const GameTimer& gt)
+void Game::UpdateEntities(const GameTimer& gt)
 {
+	for (int i = 0; i < GameWorld.GetEntities().size(); i++)
+	{
+		auto item = GameWorld.GetEntity(i);
+		XMStoreFloat4x4(&item->WorldSpace, XMMatrixScaling(GameWorld.GetEntity(i)->GetScale3f().x, GameWorld.GetEntity(i)->GetScale3f().y, 1.0f) * XMMatrixTranslation(GameWorld.GetEntity(i)->GetPosition3f().x, GameWorld.GetEntity(i)->GetPosition3f().y, 0.0f));
+		XMStoreFloat4x4(&item->TexTransform, XMMatrixScaling(1.0f, 1.0f, 1.0f));
+		item->ObjCBIndex = i;
+		item->Mat = mMaterials[GameWorld.GetEntity(i)->GetName()];
+		item->Geo = mGeometries["quadGeo"];
+		item->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		item->IndexCount = item->Geo->DrawArgs["quad"].IndexCount;
+		item->StartIndexLocation = item->Geo->DrawArgs["quad"].StartIndexLocation;
+		item->BaseVertexLocation = item->Geo->DrawArgs["quad"].BaseVertexLocation;
+	}
 
 }
 
 void Game::UpdateObjectCBs(const GameTimer& gt)
 {
 	auto currObjectCB = mCurrFrameResource->ObjectCB.get();
-	for (auto& e : mAllRitems)
+	for (auto& e : GameWorld.GetEntities())
 	{
 		// Only update the cbuffer data if the constants have changed.  
 		// This needs to be tracked per frame resource.
@@ -215,7 +228,9 @@ void Game::UpdateMaterialCBs(const GameTimer& gt)
 	{
 		// Only update the cbuffer data if the constants have changed.  If the cbuffer
 		// data changes, it needs to be updated for each FrameResource.
-		Material* mat = e.second.get();
+
+		//Material* mat = e.second.get();
+		Material* mat = e.second;
 		if (mat->NumFramesDirty > 0)
 		{
 			XMMATRIX matTransform = XMLoadFloat4x4(&mat->MatTransform);
@@ -273,14 +288,15 @@ void Game::LoadTextures()
 {
 	for (int i = 0; i < GameWorld.GetEntities().size(); i++)
 	{
-		auto tex = std::make_unique<Texture>();
-		tex->Name = GameWorld.GetEntity(i)->GetTextureName();
-		tex->Filename = GameWorld.GetEntity(i)->GetTexturePath();
+		//auto tex = std::make_unique<Texture>();
+		auto tex = new Texture();
+		tex->Name = GameWorld.GetEntity(i)->GetName();
+		tex->Filename = GameWorld.GetEntity(i)->GetImagePath();
 		ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
 			mCommandList.Get(), tex->Filename.c_str(),
 			tex->Resource, tex->UploadHeap));
-
-		mTextures[GameWorld.GetEntity(i)->GetTextureName()] = std::move(tex);
+		//mTextures[GameWorld.GetEntity(i)->GetName()] = std::move(tex);
+		mTextures[GameWorld.GetEntity(i)->GetName()] = tex;
 	}
 }
 
@@ -338,7 +354,7 @@ void Game::BuildDescriptorHeaps()
 	
 	for (int i = 0; i < GameWorld.GetEntities().size(); i++)
 	{
-		auto  tex = mTextures[GameWorld.GetEntity(i)->GetTextureName()]->Resource;
+		auto  tex = mTextures[GameWorld.GetEntity(i)->GetName()]->Resource;
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -403,7 +419,8 @@ void Game::BuildShapeGeometry()
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
 
-	auto geo = std::make_unique<MeshGeometry>();
+	//auto geo = std::make_unique<MeshGeometry>();
+	auto geo = new MeshGeometry();
 	geo->Name = "quadGeo";
 
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &geo->VertexBufferCPU));
@@ -425,7 +442,8 @@ void Game::BuildShapeGeometry()
 
 	geo->DrawArgs["quad"] = quadSubmesh;
 
-	mGeometries[geo->Name] = std::move(geo);
+	//mGeometries[geo->Name] = std::move(geo);
+	mGeometries[geo->Name] = geo;
 }
 
 void Game::BuildPSOs()
@@ -477,7 +495,7 @@ void Game::BuildFrameResources()
 	for (int i = 0; i < gNumFrameResources; ++i)
 	{
 		mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
-			1, (UINT)mAllRitems.size(), (UINT)mMaterials.size()));
+			1, (UINT)GameWorld.GetEntities().size(), (UINT)mMaterials.size()));
 	}
 }
 
@@ -485,41 +503,41 @@ void Game::BuildMaterials()
 {
 	for (int i = 0; i < GameWorld.GetEntities().size(); i++)
 	{
-		auto mat = std::make_unique<Material>();
-		mat->Name = GameWorld.GetEntity(i)->GetTextureName();
+		//auto mat = std::make_unique<Material>();
+		auto mat = new Material();
+		mat->Name = GameWorld.GetEntity(i)->GetName();
 		mat->MatCBIndex = i;
 		mat->DiffuseSrvHeapIndex = i;
 		mat->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 		mat->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05f);
 		mat->Roughness = 0.2f;
-
-		mMaterials[mat->Name] = std::move(mat);
+		//mMaterials[mat->Name] = std::move(mat);
+		mMaterials[mat->Name] = mat;
 	}
 }
 
-void Game::BuildRenderItems()
+void Game::BuildEntities()
 {
 	for (int i = 0; i < GameWorld.GetEntities().size(); i++)
 	{
-		auto item = std::make_unique<RenderItem>();
-		XMStoreFloat4x4(&item->WorldSpace, XMMatrixScaling(GameWorld.GetEntity(i)->GetScale().x, GameWorld.GetEntity(i)->GetScale().y, 1.0f) * XMMatrixTranslation(GameWorld.GetEntity(i)->GetPosition().x, GameWorld.GetEntity(i)->GetPosition().y, 0.0f));
+		auto item = GameWorld.GetEntity(i);
+		XMStoreFloat4x4(&item->WorldSpace, XMMatrixScaling(GameWorld.GetEntity(i)->GetScale3f().x, GameWorld.GetEntity(i)->GetScale3f().y, 1.0f) * XMMatrixTranslation(GameWorld.GetEntity(i)->GetPosition3f().x, GameWorld.GetEntity(i)->GetPosition3f().y, 0.0f));
 		XMStoreFloat4x4(&item->TexTransform, XMMatrixScaling(1.0f, 1.0f, 1.0f));
 		item->ObjCBIndex = i;
-		item->Mat = mMaterials[GameWorld.GetEntity(i)->GetTextureName()].get();
-		item->Geo = mGeometries["quadGeo"].get();
+		item->Mat = mMaterials[GameWorld.GetEntity(i)->GetName()];
+		item->Geo = mGeometries["quadGeo"];
 		item->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		item->IndexCount = item->Geo->DrawArgs["quad"].IndexCount;
 		item->StartIndexLocation = item->Geo->DrawArgs["quad"].StartIndexLocation;
 		item->BaseVertexLocation = item->Geo->DrawArgs["quad"].BaseVertexLocation;
-		mAllRitems.push_back(std::move(item));
 	}
 
-	for (auto& e : mAllRitems)
-		mRitemLayer[(int)RenderLayer::AlphaTested].push_back(e.get());
+	for (auto& e : GameWorld.GetEntities())
+		mRitemLayer[(int)RenderLayer::AlphaTested].push_back(e);
 
 }
 
-void Game::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
+void Game::DrawEntities(ID3D12GraphicsCommandList* cmdList, const std::vector<Entity*>& ritems)
 {
 	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 	UINT matCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(MaterialConstants));

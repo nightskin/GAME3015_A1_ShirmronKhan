@@ -1,3 +1,4 @@
-﻿  Game.cpp
-C:\Users\Shimron\Desktop\school and work\school\Game Engine Development 2\DirectX-master\A1\A1\Game.cpp(332,47): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
-  A1.vcxproj -> C:\Users\Shimron\Desktop\school and work\school\Game Engine Development 2\DirectX-master\A1\x64\Debug\A1.exe
+﻿  Aircraft.cpp
+  BG.cpp
+  Generating Code...
+  A1.vcxproj -> C:\Users\Shimron\Desktop\school and work\school\Game Engine Development 2\GAME3015_A1_ShirmronKhan\A1\x64\Debug\A1.exe

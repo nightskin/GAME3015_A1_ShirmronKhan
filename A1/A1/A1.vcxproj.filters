@@ -57,6 +57,12 @@
     <ClCompile Include="A1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Aircraft.cpp">
+      <Filter>Engine Files\CPPs</Filter>
+    </ClCompile>
+    <ClCompile Include="BG.cpp">
+      <Filter>Engine Files\CPPs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Common\Camera.h">
@@ -96,6 +102,12 @@
       <Filter>Engine Files\Headers</Filter>
     </ClInclude>
     <ClInclude Include="World.h">
+      <Filter>Engine Files\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Aircraft.h">
+      <Filter>Engine Files\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BG.h">
       <Filter>Engine Files\Headers</Filter>
     </ClInclude>
   </ItemGroup>
